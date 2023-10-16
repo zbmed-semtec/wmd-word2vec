@@ -112,7 +112,7 @@ def write_to_tsv(ref_pmids: list, precision_matrix: np.array, output_filepath: s
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--wmd_file_oath", help="File path to the 4-column word mover's closeness existing pair matrix"
+    parser.add_argument("-c", "--wmd_file_path", help="File path to the 4-column word mover's closeness existing pair matrix"
                         , required=True)
     parser.add_argument("-o", "--output_path", help="File path to save the precision matrix",
                         required=True)

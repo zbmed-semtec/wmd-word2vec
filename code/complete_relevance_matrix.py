@@ -13,27 +13,34 @@ try:
 except:
         "Word embddings not definined yet, generating word embeddings..."
 
-def prepareFromNPY(filepathIn: str):
+def prepareFromNPY(filepath_in: str, remove_stop_words: bool):
         '''
         Retrieves data from a RELISH npy file, further removing any stopword tokens and combining both title and abstract into a document.
 
         Parameters
         ----------
-        filepathIn: str
+        filepath_in: str
                 The filepath of the RELISH input npy file.
-
+        remove_stop_words: bool
+                Whether stopwords get removed or not.
         Returns
         -------
         dict of nump array
                 A dictionary where each tokenized document is stored at their pmid.
         '''
-        stop_words = set(stopwords.words('english'))
-        doc = np.load(filepathIn, allow_pickle=True)
+        doc = np.load(filepath_in, allow_pickle=True)
         dict = {}
-        for line in doc:
-                document = np.ndarray.tolist(line[1])
-                document.extend(np.ndarray.tolist(line[2]))
-                dict[np.ndarray.tolist(line[0])] = [w for w in document if not w in stop_words]
+        if remove_stop_words:
+                stop_words = set(stopwords.words('english'))
+                for line in doc:
+                        document = np.ndarray.tolist(line[1])
+                        document.extend(np.ndarray.tolist(line[2]))
+                        dict[np.ndarray.tolist(line[0])] = [w for w in document if not w in stop_words]
+        else:
+                for line in doc:
+                        document = np.ndarray.tolist(line[1])
+                        document.extend(np.ndarray.tolist(line[2]))
+                        dict[np.ndarray.tolist(line[0])] = [w for w in document]
         return dict
 
 def generateWord2VecModel(filepathIn: str, params: dict):
@@ -136,7 +143,7 @@ if __name__ == "__main__":
         params = {'vector_size':200, 'epochs':5, 'window':5, 'min_count':2, 'workers':4}
 
         print("Preparing NPY dict...")
-        global_npy_dict = prepareFromNPY(args.input)
+        global_npy_dict = prepareFromNPY(args.input, True)
         generateWord2VecModel(args.input, "./data/word2vec_model", params)
         global_word2vec = KeyedVectors.load("./data/word2vec_model") 
         freeze_support()
