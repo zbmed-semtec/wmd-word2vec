@@ -20,7 +20,7 @@ def load_word_movers_matrix(word_movers_matrix: str) -> pd.DataFrame:
     Loads and return a pandas dataframe object of the word mover's closeness.
     Parameters
     ----------
-    cosine_similarity_matrix : str
+    word_movers_matrix : str
         Filepath for the word mover's closeness matrix of existing pairs in the TSV format.
     Returns
     -------
@@ -101,7 +101,6 @@ def calculate_idcg_at_n(n: int, sorted_assessed_pmids: pd.DataFrame) -> float:
     """
     idcg_n = 0
     for i, (index, row) in enumerate(sorted_assessed_pmids[:n].iterrows(), start=1):
-        # rel = row['Relevance Assessment']
         rel = row['relevance']
         value = (2**rel - 1) / math.log2(i + 1)
         idcg_n += value
@@ -169,7 +168,7 @@ def write_to_tsv(pmids: list, ndcg_matrix: np.matrix, output_file: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str,
-                        help="Path for TREC/RELISH 4 column TSV file (with relevance and word mover's closeness scores).")
+                        help="Path for RELISH 4 column TSV file (with relevance and word mover's closeness scores).")
     parser.add_argument('-o', '--output', type=str, help="Path for generated nDCG@n matrix TSV file.")
     args = parser.parse_args()
 
