@@ -13,7 +13,7 @@ try:
 except:
         "Word embddings not definined yet, generating word embeddings..."
 
-def prepareFromNPY(filepath_in: str, remove_stop_words: bool):
+def prepare_from_NPY(filepath_in: str, remove_stop_words: bool):
         '''
         Retrieves data from a RELISH npy file, further removing any stopword tokens and combining both title and abstract into a document.
 
@@ -43,31 +43,31 @@ def prepareFromNPY(filepath_in: str, remove_stop_words: bool):
                         dict[np.ndarray.tolist(line[0])] = [w for w in document]
         return dict
 
-def generateWord2VecModel(filepathIn: str, params: dict):
+def generate_Word2Vec_model(filepath_in: str, params: dict):
         '''
         Generates a word2vec model from all RELISH sentences using gensim and saves three model files.
 
         Parameters
         ----------
-        filepathIn: list of str
+        filepath_in: list of str
                 The filepath of the RELISH input npy file.
         params: dict
                 A dictionary of the hyperparameters for the model.
         '''
         from gensim.models import Word2Vec
-        dictionary = prepareFromNPY(filepathIn)
-        sentenceList = []
+        dictionary = prepare_from_NPY(filepath_in)
+        sentence_list = []
         for pmid in dictionary:
-                sentenceList.append(dictionary[pmid])
-        params['sentences'] = sentenceList
+                sentence_list.append(dictionary[pmid])
+        params['sentences'] = sentence_list
         model = Word2Vec(**params)
         model.save("./data/word2vec_model")
                 
 
-def getWMDDistance(tokens: list):
+def get_WMD_distance(tokens: list):
         '''
         Computes the word mover's distance between two documents.
-        Used in completeRelevanceMatrix with multiprocessing.
+        Used in complete_relevance_matrix with multiprocessing.
 
         Parameters
         ----------
@@ -81,13 +81,13 @@ def getWMDDistance(tokens: list):
         return global_word2vec.wv.wmdistance(tokens[0], tokens[1])
 
 
-def completeRelevanceMatrix(EvaluationFile: str):
+def complete_relevance_matrix(evaluation_file: str):
         '''
         Adds Word Mover's Distance to the evaluation matrix from the .npy formatted embeddings.
 
         Parameters
         ----------
-        EvaluationFile: str
+        evaluation_file: str
                 The evaluation matrix csv file.
         '''
         start = time.time()
@@ -112,13 +112,13 @@ def completeRelevanceMatrix(EvaluationFile: str):
 
         print(f"Processing {len(tokenset_pairs)} rows...")
 
-        with open(EvaluationFile, 'w', newline='') as csvfile:
+        with open(evaluation_file, 'w', newline='') as csvfile:
                 writer = csv.writer(csvfile, delimiter='\t')
                 writer.writerow(header)
 
                 total_processed = 0
                 with Pool() as p:
-                        iterator = p.imap(getWMDDistance, tokenset_pairs, 100)
+                        iterator = p.imap(get_WMD_distance, tokenset_pairs, 100)
                         for distance in iterator:
                                 row = rows[total_processed]
                                 row[3] = round(1/(1+distance), 2)
@@ -143,8 +143,8 @@ if __name__ == "__main__":
         params = {'vector_size':200, 'epochs':5, 'window':5, 'min_count':2, 'workers':4}
 
         print("Preparing NPY dict...")
-        global_npy_dict = prepareFromNPY(args.input, True)
-        generateWord2VecModel(args.input, "./data/word2vec_model", params)
+        global_npy_dict = prepare_from_NPY(args.input, True)
+        generate_Word2Vec_model(args.input, "./data/word2vec_model", params)
         global_word2vec = KeyedVectors.load("./data/word2vec_model") 
         freeze_support()
-        completeRelevanceMatrix(args.matrix)
+        complete_relevance_matrix(args.matrix)

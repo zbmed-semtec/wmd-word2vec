@@ -34,11 +34,11 @@ We construct Word2Vec models with customizable hyperparameters. We employ the pa
 # Code Implementation
 The `complete_relevance_matrix.py` script uses the RELISH Tokenized npy file as input and supports the generation and training of Word2Vec models, generation of embeddings and saving the embeddings. After the embeddings have been created, the template blank relevance matrix will be completed using the calculated word mover's distance and normalizing it to a closeness value. The script includes a default parameter dictionary with present hyperparameters. You can easily adapt it for different values and parameters by modifying the `params` dictionary. With the
 
-The script consists of two main functions `generateWord2VecModel` and `completeRelevanceMatrix`.
+The script consists of two main functions `generate_Word2Vec_model` and `complete_relevance_matrix`.
 
-`generateWord2VecModel` : This function creates a Word2vec model using the provided sentences and the inputer hyper parameter.
+`generate_Word2Vec_model` : This function creates a Word2vec model using the provided sentences and the inputer hyper parameter.
 
-`completeRelevanceMatrix` :  This function completes the template relevance matrix by adding calculating and adding the word mover's closeness for each pair. The word mover's closeness is the normalized world mover's distance to represent a value between 0.0 and 1.0 as closeness.
+`complete_relevance_matrix` :  This function completes the template relevance matrix by adding calculating and adding the word mover's closeness for each pair. The word mover's closeness is the normalized world mover's distance to represent a value between 0.0 and 1.0 as closeness.
 
 # Code Execution
 
