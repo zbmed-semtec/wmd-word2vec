@@ -42,7 +42,7 @@ def prepareFromNPY(filepathIn=None):
                 dict[np.ndarray.tolist(line[0])] = [w for w in document if not w in stop_words]
         return dict
 
-def generateWord2VecModel(filepathIn, directoryOut, params):
+def generateWord2VecModel(filepathIn, directoryOut, params, iteration):
         '''
         Generates a word2vec model from all RELISH sentences using gensim and saves three model files.
 
@@ -142,6 +142,9 @@ def completeRelevanceMatrix(EvaluationFile):
                                         total_processed += 1
                                         if total_processed % 100 == 0 or total_processed == len(tokenset_pairs):
                                                 print(f"Processed {total_processed}/{len(tokenset_pairs)} rows...")
+                        p.join()
+                        p.close()
+                        global_word2vec = None
                 print(time.time() - start)
 
 if __name__ == "__main__":
