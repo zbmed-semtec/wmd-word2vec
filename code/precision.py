@@ -109,7 +109,6 @@ def write_to_tsv(ref_pmids: list, precision_matrix: np.array, output_filepath: s
     matrix.loc[len(matrix.index)] = average_values
     pd.DataFrame(matrix).to_csv(output_filepath, sep="\t")
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--wmd_file_path", help="File path to the 4-column word mover's closeness existing pair matrix"

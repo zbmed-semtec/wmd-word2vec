@@ -1,8 +1,6 @@
-import argparse
 from gensim.models import KeyedVectors
 from multiprocessing import Pool, freeze_support
 import csv
-from nltk.corpus import stopwords
 import numpy as np
 from gensim.models import KeyedVectors
 import time
@@ -31,6 +29,9 @@ def prepare_from_NPY(filepath_in: str, remove_stop_words: bool):
         doc = np.load(filepath_in, allow_pickle=True)
         dict = {}
         if remove_stop_words:
+                import nltk
+                nltk.download('stopwords')
+                from nltk.corpus import stopwords
                 stop_words = set(stopwords.words('english'))
                 for line in doc:
                         document = np.ndarray.tolist(line[1])
@@ -43,7 +44,7 @@ def prepare_from_NPY(filepath_in: str, remove_stop_words: bool):
                         dict[np.ndarray.tolist(line[0])] = [w for w in document]
         return dict
 
-def generate_Word2Vec_model(filepath_in: str, params: dict):
+def generate_Word2Vec_model(params: dict, iteration: int):
         '''
         Generates a word2vec model from all RELISH sentences using gensim and saves three model files.
 
@@ -55,14 +56,12 @@ def generate_Word2Vec_model(filepath_in: str, params: dict):
                 A dictionary of the hyperparameters for the model.
         '''
         from gensim.models import Word2Vec
-        dictionary = prepare_from_NPY(filepath_in)
         sentence_list = []
-        for pmid in dictionary:
-                sentence_list.append(dictionary[pmid])
+        for pmid in global_npy_dict:
+                sentence_list.append(global_npy_dict[pmid])
         params['sentences'] = sentence_list
         model = Word2Vec(**params)
         model.save("./data/word2vec_model")
-                
 
 def get_WMD_distance(tokens: list):
         '''
@@ -101,10 +100,12 @@ def complete_relevance_matrix(evaluation_file: str):
                 header = next(spamreader) # Save and remove header
                 for row in spamreader:
                         try: 
+                                first_doc = global_npy_dict[row[0]]
+                                second_doc = global_npy_dict[row[1]]
                                 rows.append(row)
                                 tokenset_pairs.append((
-                                        global_npy_dict[row[0]],
-                                        global_npy_dict[row[1]]
+                                        first_doc,
+                                        second_doc
                                 ))
                         except KeyError:
                                 print(f"KeyError: {row[0]} or {row[1]} not found in dictionary")
@@ -121,7 +122,7 @@ def complete_relevance_matrix(evaluation_file: str):
                         iterator = p.imap(get_WMD_distance, tokenset_pairs, 100)
                         for distance in iterator:
                                 row = rows[total_processed]
-                                row[3] = round(1/(1+distance), 2)
+                                row[3] = round(1/(1+distance), 4)
                                 writer.writerow(row)
 
                                 total_processed += 1
@@ -133,14 +134,6 @@ def complete_relevance_matrix(evaluation_file: str):
         print(time.time() - start)
 
 if __name__ == "__main__":
-        parser = argparse.ArgumentParser()
-        parser.add_argument("-i", "--input", type=str,
-                       help="Path to input RELISH tokenized .npy file")
-        parser.add_argument("-m", "--matrix", type=str,
-                       help="Path of relevance matrix file")                
-        args = parser.parse_args()
-
-        params = {'vector_size':200, 'epochs':5, 'window':5, 'min_count':2, 'workers':4}
 
         print("Preparing NPY dict...")
         global_npy_dict = prepare_from_NPY(args.input, True)
