@@ -1,3 +1,4 @@
+import argparse
 from gensim.models import KeyedVectors
 from multiprocessing import Pool, freeze_support
 import csv
@@ -44,7 +45,7 @@ def prepare_from_NPY(filepath_in: str, remove_stop_words: bool):
                         dict[np.ndarray.tolist(line[0])] = [w for w in document]
         return dict
 
-def generate_Word2Vec_model(params: dict, iteration: int):
+def generate_Word2Vec_model(params: dict):
         '''
         Generates a word2vec model from all RELISH sentences using gensim and saves three model files.
 
@@ -135,9 +136,14 @@ def complete_relevance_matrix(evaluation_file: str):
 
 if __name__ == "__main__":
 
+        parser = argparse.ArgumentParser()
+        parser.add_argument("-i", "--input", type=str,
+                       help="Path to input RELISH tokenized .npy file")
+        parser.add_argument("-m", "--matrix", type=str,
+                       help="Path of relevance matrix file")                
+        args = parser.parse_args()
+
+        params = {'vector_size':200, 'epochs':5, 'window':5, 'min_count':2, 'workers':4}
+
         print("Preparing NPY dict...")
         global_npy_dict = prepare_from_NPY(args.input, True)
-        generate_Word2Vec_model(args.input, "./data/word2vec_model", params)
-        global_word2vec = KeyedVectors.load("./data/word2vec_model") 
-        freeze_support()
-        complete_relevance_matrix(args.matrix)
