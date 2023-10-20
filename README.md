@@ -44,4 +44,4 @@ The script consists of two main functions `generate_Word2Vec_model` and `complet
 
 To run this script, please execute the following command:
 
-`python3 code/complete_relevance_matrix.py --input data/RELISH_tokenized.npy --matrix data/relevance_WMD.tsv`
+`python3 code/complete_relevance_matrix.py --input data/RELISH_tokenized.npy --matrix data/relevance_WMD.tsv --rm_stopwords True`

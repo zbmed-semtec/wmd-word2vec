@@ -45,7 +45,7 @@ def sort_collection(pmid: str, data: pd.DataFrame) -> pd.DataFrame:
     return sorted_collection
 
 
-def calculate_precision(sorted_collection: pd.DataFrame, n: int) -> float:
+def calculate_precision(sorted_collection: pd.DataFrame, n: int, multi_class: bool) -> float:
     """
     Calculates the precision score for the input sorted_collection at given n value.
     Parameters
@@ -54,18 +54,23 @@ def calculate_precision(sorted_collection: pd.DataFrame, n: int) -> float:
         Sorted Pandas Dataframe based on the given PMID .
     n : int
         Value of n at which precision is to be calculated.
+    multi_class : bool
+        Defines whether to take into account multiple classes for the precision score.
     Returns
     -------
     precision_n : float
         Value of Precision@n.
     """
     top_n = sorted_collection[:n]
-    true_positives_n = len(top_n[(top_n["Relevance"] == 2) | (top_n["Relevance"] == 1)])
+    if multi_class:
+       true_positives_n = len(top_n[(top_n["Relevance"] == 2)]) # 3-classes solution
+    else: 
+        true_positives_n = len(top_n[(top_n["Relevance"] == 2) | (top_n["Relevance"] == 1)]) # 2-classes solution
     precision_n = round(true_positives_n/n, 4)
     return precision_n
 
 
-def generate_matrix(ref_pmids: list, data: pd.DataFrame) -> np.array:
+def generate_matrix(ref_pmids: list, data: pd.DataFrame, multi_class: bool) -> np.array:
     """
     Wrapper function to generate the precision matrix at the given values of n for every unique PMID in the input data.
     Parameters
@@ -74,6 +79,8 @@ def generate_matrix(ref_pmids: list, data: pd.DataFrame) -> np.array:
         List of all unique PMIDs.
     data : pd.Dataframe
         Pandas Dataframe cosisting of 4 columns: PMID1, PMID2, Relevance, Word mover's closeness.
+    multi_class : bool
+        Defines whether to take into account multiple classes for the precision score.
     Returns
     -------
     precision_matrix : np.array
@@ -84,7 +91,7 @@ def generate_matrix(ref_pmids: list, data: pd.DataFrame) -> np.array:
     for pmid_index, pmid in enumerate(ref_pmids):
         sorted_collection = sort_collection(pmid, data)
         for index, n in enumerate(value_of_n):
-            precision_n = calculate_precision(sorted_collection, n)
+            precision_n = calculate_precision(sorted_collection, n, multi_class)
             precision_matrix[pmid_index][index] = precision_n
     return precision_matrix
 
@@ -115,9 +122,11 @@ if __name__ == "__main__":
                         , required=True)
     parser.add_argument("-o", "--output_path", help="File path to save the precision matrix",
                         required=True)
+    parser.add_argument("-m", "--multiple_classes", help="If True, apply the 3-class approach, if False apply the 2-class approach of considering partially-relevant articles to be positive.",
+                        required=True)
 
     args = parser.parse_args()
 
-    ref_pmids, data = read_file(args.wmd_file_oath)
-    matrix = generate_matrix(ref_pmids, data)
+    ref_pmids, data = read_file(args.wmd_file_path)
+    matrix = generate_matrix(ref_pmids, data, args.multiple_classes)
     write_to_tsv(ref_pmids, matrix, args.output_path)

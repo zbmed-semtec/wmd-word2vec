@@ -140,10 +140,16 @@ if __name__ == "__main__":
         parser.add_argument("-i", "--input", type=str,
                        help="Path to input RELISH tokenized .npy file")
         parser.add_argument("-m", "--matrix", type=str,
-                       help="Path of relevance matrix file")                
+                       help="Path of relevance matrix file")
+        parser.add_argument("-s", "--rm_stopwords", type=bool,
+                       help="Whether to remove stopwords or not")            
         args = parser.parse_args()
 
         params = {'vector_size':200, 'epochs':5, 'window':5, 'min_count':2, 'workers':4}
 
         print("Preparing NPY dict...")
-        global_npy_dict = prepare_from_NPY(args.input, True)
+        global_npy_dict = prepare_from_NPY(args.input, args.rm_stopwords)
+        generate_Word2Vec_model(params)
+        global_word2vec = KeyedVectors.load("./data/word2vec_model") 
+        freeze_support()
+        complete_relevance_matrix(args.matrix)
