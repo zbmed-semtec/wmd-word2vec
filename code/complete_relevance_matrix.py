@@ -39,7 +39,6 @@ def prepare_from_NPY(filepath_in: str, remove_stop_words: bool):
 		for line in doc:
 			document = np.ndarray.tolist(line[1])
 			document.extend(np.ndarray.tolist(line[2]))
-			print(line[0])
 			dict[int(line[0])] = [w for w in document if not w in stop_words]
 	else:
 		for line in doc:
