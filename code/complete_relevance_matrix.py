@@ -101,8 +101,8 @@ def complete_relevance_matrix(evaluation_file: str):
                 header = next(spamreader) # Save and remove header
                 for row in spamreader:
                         try: 
-                                first_doc = global_npy_dict[row[0]]
-                                second_doc = global_npy_dict[row[1]]
+                                first_doc = global_npy_dict[int(row[0])]
+                                second_doc = global_npy_dict[int(row[1])]
                                 rows.append(row)
                                 tokenset_pairs.append((
                                         first_doc,
@@ -111,7 +111,6 @@ def complete_relevance_matrix(evaluation_file: str):
                         except KeyError:
                                 print(f"KeyError: {row[0]} or {row[1]} not found in dictionary")
                                 continue
-
         print(f"Processing {len(tokenset_pairs)} rows...")
 
         with open(evaluation_file, 'w', newline='') as csvfile:
@@ -141,7 +140,7 @@ if __name__ == "__main__":
                        help="Path to input RELISH tokenized .npy file")
         parser.add_argument("-m", "--matrix", type=str,
                        help="Path of relevance matrix file")
-        parser.add_argument("-s", "--rm_stopwords", type=bool,
+        parser.add_argument("-s", "--rm_stopwords", type=int,
                        help="Whether to remove stopwords or not")            
         args = parser.parse_args()
 
