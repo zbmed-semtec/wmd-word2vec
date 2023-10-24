@@ -40,8 +40,10 @@ The script consists of two main functions `generate_Word2Vec_model` and `complet
 
 `complete_relevance_matrix` :  This function completes the template relevance matrix by adding calculating and adding the word mover's closeness for each pair. The word mover's closeness is the normalized world mover's distance to represent a value between 0.0 and 1.0 as closeness.
 
+`initialize_hyperparameters.py` : Insert a list of hyperparameters in its main function to generate custom word2vec parameter values to train the model on different params.
+
 # Code Execution
 
 To run this script, please execute the following command:
 
-`python3 code/complete_relevance_matrix.py --input data/RELISH_tokenized.npy --matrix data/relevance_WMD.tsv --rm_stopwords 1`
+`python3 code/complete_relevance_matrix.py -i data/RELISH_Tokenized_Sample.npy -ma data/relevance_WMD.tsv -s 1 -pj data/hyperparameters_word2vec.json -md data`
