@@ -1,4 +1,4 @@
-# Word2doc2vec-Doc-relevance
+# WMD-Word2Vec
 This repository focuses on the RELISH Corpus to identify relevancy of a given pair of PubMed papers. The approach uses Word Mover's Distance (WMD), which computes a semantic closeness between two documents. WMD does not require any hyperparamters to function, however it is reliant on word embeddings, with which it can calculate the distance of word vectors between two documents.
 
 ## Table of Contents
@@ -63,13 +63,7 @@ Another metric used is the nDCG@N (normalized Discounted Cumulative Gain). This 
 
 ## Code Implementation 🛠
 
-The [`generate_embeddings.py`](./code/generate_embeddings.py) script uses the RELISH Tokenized npy file as input and supports the generation and training of Word2Vec models, generation of embeddings and saving the embeddings as pickle files.
-
-The script consists of two main functions `generateWord2VecModel` and `generateDocumentEmbeddings`.
-
-`generateWord2VecModel` : This function creates a Word2vec model using the provided sentences and the inputer hyper parameter.
-
-`generateDocumentEmbeddings` :  This function generates document embeddings from titles and abstracts using Word2Vec and centroid calculations. It can utilize either an existing or a default pretrained model for word embeddings and saves the results as .npy or .pkl files based on the specified format.
+The [`complete_relevance_matrix.py`](./code/complete_relevance_matrix.py) script uses the RELISH Tokenized npy file as input and supports the generation and training of Word2Vec models and completing the blank 4 column wide [relevance matrix](./data/relevance_WMD_blank.tsv) with the relevant Word Mover's Closeness scores for each pmid pair.
 
 ## Getting Started 🧑‍💻
 
@@ -108,7 +102,7 @@ The script will first create word embeddings and then compute the Word Mover's D
 
 
 ### Step 3: Precision@N
-In order to calculate the Precision@N scores and execute this [script](/code/precision.py), run the follwing command:
+In order to calculate the Precision@N scores and execute this [script](/code/precision.py), run the following command:
 
 ```
 python3 code/precision.py [-c WMD FILE PATH] [-o OUTPUT PATH]
