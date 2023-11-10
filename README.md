@@ -4,33 +4,33 @@ This repository focuses on the RELISH Corpus to identify relevancy of a given pa
 ## Table of Contents
 
 1. [About](#about)
-2. [Input Data](#input-data-🗒)
-3. [Pipeline](#pipeline-📝)
-    1. [Generate Embeddings](#generate-embeddings-🧮)
+2. [Input Data](#input-data)
+3. [Pipeline](#pipeline)
+    1. [Generate Embeddings](#generate-embeddings)
         - [Using Trained Word2Vec models](#using-trained-word2vec-models)
           - [Parameters](#parameters)
           - [Hyperparameters](#hyperparameters)
         - [Using Pre-trained Word2Vec models](#using-pre-trained-word2vec-models)
     2. [Calculate Word Mover's Distance](#calculate-word-movers-distance-📐)
-    3. [Evaluation](#evaluation-📊)
+    3. [Evaluation](#evaluation)
         - [Precision@N](#precisionn)
         - [nDCG@N](#ndcgn)
-4. [Code Implementation](#code-implementation-🛠)
-5. [Getting Started](#getting-started-🧑‍💻)
+4. [Code Implementation](#code-implementation)
+5. [Getting Started](#getting-started)
 
 ## About
 
 Our approach involves utilizing Word2Vec to capture word-level semantics and to generate word embeddings. We then employ the centroid approach to create document-level embeddings, which entails calculating the centroids of word embeddings within each document's title and abstract. For word embeddings, we utilize both pretrained and trained models. By default, we use the "word2vec-google-news-300" Gensim word2vec model as the pretrained model for word embeddings. However, it can be substituted with other pretrained models available in the Gensim library. For our trained model, we utilize the documents from the RELISH dataset as the training corpus. The words from the titles and abstracts of each document are combined and input into the model as a single document.
 
-## Input Data 🗒
+## Input Data
 
 The input data for this method consists of preprocessed tokens derived from the RELISH documents. These tokens are stored in the RELISH.npy file, which contains preprocessed arrays comprising PMIDs, document titles, and abstracts. These arrays are generated through an extensive preprocessing pipeline, as elaborated in the [relish-preprocessing repository](https://github.com/zbmed-semtec/relish-preprocessing). Within this preprocessing pipeline, both the title and abstract texts undergo several stages of refinement: structural words are eliminated, text is converted to lowercase, and finally, tokenization is employed, resulting in arrays of individual words. We also additionally remove stopwords from the tokenized input.
 
-## Pipeline 📝
+## Pipeline
 
 The following section outlines the process of generating word-level embeddings for each PMID of the RELISH corpus and completing the similarity matrix with word mover's distances.
 
-### Generate Embeddings 🧮
+### Generate Embeddings
 The following section species on the process of either training a word2vec model or using a pretrained one.
 
 #### Using Trained Word2Vec models
@@ -48,10 +48,10 @@ The hyperparameters can be modified in [`hyperparameters_word2vec.json`](./data/
 #### Using Pre-trained Word2Vec models
 By default, we make use of the Gensim Word2Vec model "word2vec-google-news-300" to generate pre-trained word embeddings.
 
-### Calculate Word Mover's Distance 📐
+### Calculate Word Mover's Distance
 To assess the similarity between two documents within the RELISH corpus, we use the Word Mover's Distance calculted via the gensim module for [Word Mover's Distance](https://radimrehurek.com/gensim/auto_examples/tutorials/run_wmd.html). For this process we complete a 4-column relevance matrix with an adjusted WMD value to represent closeness between to documents.
 
-## Evaluation 📊
+## Evaluation
 
 ### Precision@N
 
@@ -61,11 +61,11 @@ In order to evaluate the effectiveness of this approach, we make use of Precisio
 
 Another metric used is the nDCG@N (normalized Discounted Cumulative Gain). This ranking metric assesses document retrieval quality by considering both relevance and document ranking. It operates by using a TSV file containing relevance and word mover's closeness scores, involving the computation of DCG@N and iDCG@N scores. The result is an nDCG@N matrix for various cutoff values (N) and each PMID in the corpus, with detailed information available in the [documentation](https://github.com/zbmed-semtec/medline-preprocessing/tree/main/code/Evaluation).
 
-## Code Implementation 🛠
+## Code Implementation
 
 The [`complete_relevance_matrix.py`](./code/complete_relevance_matrix.py) script uses the RELISH Tokenized npy file as input and supports the generation and training of Word2Vec models and completing the blank 4 column wide [relevance matrix](./data/relevance_WMD_blank.tsv) with the relevant Word Mover's Closeness scores for each pmid pair.
 
-## Getting Started 🧑‍💻
+## Getting Started
 
 To get started with this project, follow these steps:
 
