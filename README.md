@@ -108,7 +108,7 @@ In order to calculate the Precision@N scores and execute this [script](/code/pre
 python3 code/precision.py [-c WMD FILE PATH] [-o OUTPUT PATH]
 ```
 
-You must pass the following two arguments:
+You must pass the following three arguments:
 
 + -w/ --wmd_file_path: path to the 4-column word mover's closeness existing pairs RELISH file: (tsv file)
 + -o/ --output_path: path to save the generated precision matrix: (tsv file)
