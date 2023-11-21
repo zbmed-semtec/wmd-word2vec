@@ -177,8 +177,8 @@ if __name__ == "__main__":
     if not os.path.exists("./data/output/gain_matrices"):
             os.makedirs("./data/output/gain_matrices")
 
-    similarity_matrix = load_word_movers_matrix(parser.input)
+    similarity_matrix = load_word_movers_matrix(args.input)
     get_dcg_matrix(similarity_matrix, "./data/output/gain_matrices/dcg.tsv")
     get_identity_dcg_matrix(similarity_matrix, "./data/output/gain_matrices/idcg.tsv")
     pmids, ndcg_matrix = fill_ndcg_scores("./data/output/gain_matrices/dcg.tsv", "./data/output/gain_matrices/idcg.tsv")
-    write_to_tsv(pmids, ndcg_matrix, parser.output)
+    write_to_tsv(pmids, ndcg_matrix, args.output)
