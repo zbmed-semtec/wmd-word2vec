@@ -14,16 +14,14 @@ try:
 except:
 	"Word embddings not definined yet, generating word embeddings..."
 
-def prepare_from_NPY(filepath_in: str, remove_stop_words: bool):
+def prepare_from_NPY(filepath_in: str):
 	'''
-	Retrieves data from a RELISH npy file, further removing any stopword tokens and combining both title and abstract into a document.
+	Retrieves data from a RELISH npy file, combining both title and abstract into a document.
 
 	Parameters
 	----------
 	filepath_in: str
 		The filepath of the RELISH input npy file.
-	remove_stop_words: bool
-		Whether stopwords get removed or not.
 	Returns
 	-------
 	dict of nump array
@@ -31,20 +29,10 @@ def prepare_from_NPY(filepath_in: str, remove_stop_words: bool):
 	'''
 	doc = np.load(filepath_in, allow_pickle=True)
 	dict = {}
-	if remove_stop_words:
-		import nltk
-		nltk.download('stopwords')
-		from nltk.corpus import stopwords
-		stop_words = set(stopwords.words('english'))
-		for line in doc:
-			document = np.ndarray.tolist(line[1])
-			document.extend(np.ndarray.tolist(line[2]))
-			dict[int(line[0])] = [w for w in document if not w in stop_words]
-	else:
-		for line in doc:
-			document = np.ndarray.tolist(line[1])
-			document.extend(np.ndarray.tolist(line[2]))
-			dict[int(line[0])] = [w for w in document]
+	for line in doc:
+		document = np.ndarray.tolist(line[1])
+		document.extend(np.ndarray.tolist(line[2]))
+		dict[int(line[0])] = [w for w in document]
 	return dict
 
 def generate_Word2Vec_model(params: dict, iteration: int, word_embedding_directory: str):
@@ -149,8 +137,6 @@ if __name__ == "__main__":
 		help="Path to input RELISH tokenized .npy file")
 	parser.add_argument("-ma", "--matrix", type=str,
 		help="Path of relevance matrix file")
-	parser.add_argument("-s", "--rm_stopwords", type=int,
-		help="Whether to remove stopwords or not")
 	parser.add_argument("-pj", "--params_json", type=str,
 		help="File location of word2vec parameter list.")
 	parser.add_argument("-md", "--model_directory", type=str,
@@ -163,7 +149,7 @@ if __name__ == "__main__":
 		params = json.load(openfile)
 
 	print("Preparing NPY dict...")
-	global_npy_dict = prepare_from_NPY(args.input, args.rm_stopwords)
+	global_npy_dict = prepare_from_NPY(args.input)
 	for iteration in range(len(params)):
 		generate_Word2Vec_model(params[iteration], iteration, args.model_directory)
 		global_word2vec = KeyedVectors.load("./data/word2vec_model") 

@@ -89,13 +89,13 @@ git clone git@github.com:zbmed-semtec/wmd_word2vec.git
 The [`complete_relevance_matrix.py`](./code/complete_relevance_matrix.py) script uses the RELISH Tokenized npy file as input and includes a default parameter json with preset hyperparameters. You can easily adapt it for different values and parameters by modifying the [`hyperparameters_word2vec.json`](./data/hyperparameters_word2vec.json). Make sure to have the RELISH Tokenized.npy file within the directory under the data folder.
 
 ```
-python3 code/precision.py [-i RELISH FILE PATH] [-ma OUTPUT RELEANCE MATRIX PATH] [-s REMOVE STOPWORDS] [-pj HYPERPARAMETERS JSON PATH] [-md WORD EMBEDDINGS OUTPUT PATH]
+python3 code/precision.py [-i RELISH FILE PATH] [-ma OUTPUT RELEANCE MATRIX PATH] [-pj HYPERPARAMETERS JSON PATH] [-md WORD EMBEDDINGS OUTPUT PATH]
 ```
 
 To run this script, please execute the following command:
 
 ```
-python3 code/complete_relevance_matrix.py -i data/RELISH_Tokenized_Sample.npy -ma data/relevance_WMD -s 1 -pj data/hyperparameters_word2vec.json -md data
+python3 code/complete_relevance_matrix.py -i data/RELISH_Tokenized_Sample.npy -ma data/relevance_WMD -pj data/hyperparameters_word2vec.json -md data
 ```
 
 The script will first create word embeddings and then compute the Word Mover's Distances, completing the given relevance matrix. If you are using the default hyperparameters, you can expect it to create 18 new relevance matrices for each trained word2vec model.
