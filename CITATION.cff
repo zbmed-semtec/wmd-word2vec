@@ -14,5 +14,6 @@ authors:
     orcid: "https://orcid.org/0000-0002-1018-0370"
 version: 1.0.0
 date-released: "2023-4-12"
-license: gpl-3.0
+license: GPL-3.0-or-later
+copyright: ZB MED
 repository-code: "https://github.com/zbmed-semtec/wmd_word2vec.git"
