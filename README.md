@@ -84,8 +84,34 @@ Ensure you have set up SSH keys in your GitHub account.
 ```
 git clone git@github.com:zbmed-semtec/wmd_word2vec.git
 ```
+### Step 2: Create a virtual environment and install dependencies
 
-### Step 2: Generate Embeddings and Calculate Word Mover's Distances
+To create a virtual environment within your repository, run the following command:
+
+```
+python3 -m venv .venv 
+source .venv/bin/activate   # On Windows, use '.venv\Scripts\activate' 
+```
+
+To confirm if the virtual environment is activated and check the location of yourPython interpreter, run the following command:
+
+```
+which python    # On Windows command prompt, use 'where python'
+                # On Windows PowerShell, use 'Get-Command python'
+```
+The code is stable with python 3.6 and higher. The required python packages are listed in the requirements.txt file. To install the required packages, run the following command:
+
+```
+pip install -r code/requirements.txt
+```
+
+To deactivate the virtual environment after running the project, run the following command:
+
+```
+deactivate
+```
+
+### Step 3: Generate Embeddings and Calculate Word Mover's Distances
 The [`complete_relevance_matrix.py`](./code/complete_relevance_matrix.py) script uses the RELISH Tokenized npy file as input and includes a default parameter json with preset hyperparameters. You can easily adapt it for different values and parameters by modifying the [`hyperparameters_word2vec.json`](./data/hyperparameters_word2vec.json). Make sure to have the RELISH Tokenized.npy file within the directory under the data folder.
 
 ```
@@ -101,7 +127,7 @@ python3 code/complete_relevance_matrix.py -i data/RELISH_Tokenized_Sample.npy -m
 The script will first create word embeddings and then compute the Word Mover's Distances, completing the given relevance matrix. If you are using the default hyperparameters, you can expect it to create 18 new relevance matrices for each trained word2vec model.
 
 
-### Step 3: Precision@N
+### Step 4: Precision@N
 In order to calculate the Precision@N scores and execute this [script](/code/precision.py), run the following command:
 
 ```
@@ -121,7 +147,7 @@ python3 code/precision.py -w data/relevance_WMD_0.tsv -o data/precision_WMD_0.ts
 ```
 
 
-### Step 4: nDCG@N
+### Step 5: nDCG@N
 In order to calculate nDCG scores and execute this [script](/code/calculate_gain.py), run the following command:
 
 ```
