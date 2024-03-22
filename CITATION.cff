@@ -16,7 +16,6 @@ authors:
     given-names: "Leyla Jael"
     orcid: "https://orcid.org/0000-0003-3986-0510"
 version: 1.0.0
-date-released: "2023-4-12"
 license: GPL-3.0-or-later
 copyright: "ZB MED"
 repository-code: "https://github.com/zbmed-semtec/wmd_word2vec.git"
