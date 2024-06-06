@@ -1,18 +1,18 @@
 # Source code: https://github.com/zbmed-semtec/medline-preprocessing/blob/main/code/Evaluation/calculate_gain.py
 # This file includes the modifications to the source code according to this project
 
-import os, sys
+from numpy import ndarray
+from typing import Any, List, Tuple
+import numpy as np
+import pandas as pd
+import math
+import os
+import sys
 import argparse
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-
-import math
-import pandas as pd
-import numpy as np
-from typing import Any, List, Tuple
-from numpy import ndarray
 
 
 def load_word_movers_matrix(word_movers_matrix: str) -> pd.DataFrame:
@@ -40,8 +40,7 @@ def get_dcg_matrix(similarity_matrix: pd.DataFrame, output_file: str):
     similarity_matrix : pd.Dataframe
         Word mover's closeness matrix.
     """
-    dcg_matrix = similarity_matrix.sort_values(['PMID1', "Word mover's closeness"],
-                                               ascending=[True, False], ignore_index=True)                                               
+    dcg_matrix = similarity_matrix
     dcg_matrix.index = dcg_matrix.index + 1
     # dcg_matrix.to_csv("./data/doc2vec-doc/dcg_doc2vec-doc.tsv", sep='\t')
     dcg_matrix.to_csv(output_file, sep='\t')
@@ -57,7 +56,7 @@ def get_identity_dcg_matrix(similarity_matrix: pd.DataFrame, output_file: str):
         Word mover's closenss matrix.
     """
     idcg_matrix = similarity_matrix.sort_values(['PMID1', 'relevance'],
-                                                ascending=[True, False], ignore_index=True)                                                
+                                                ascending=[True, False], ignore_index=True)
     idcg_matrix.index = idcg_matrix.index + 1
     idcg_matrix.to_csv(output_file, sep='\t')
 
@@ -133,8 +132,10 @@ def fill_ndcg_scores(dcg_matrix: str, idcg_matrix: str) -> Tuple[List[Any], ndar
     ndcg_matrix = np.empty(shape=(len(all_pmids), len(value_of_n)))
 
     for pmid_index, pmid in enumerate(all_pmids):
-        all_assessed_pmids = pd.DataFrame(dcg_matrix.loc[dcg_matrix['PMID1'] == pmid])
-        sorted_assessed_pmids = pd.DataFrame(idcg_matrix.loc[idcg_matrix['PMID1'] == pmid])
+        all_assessed_pmids = pd.DataFrame(
+            dcg_matrix.loc[dcg_matrix['PMID1'] == pmid])
+        sorted_assessed_pmids = pd.DataFrame(
+            idcg_matrix.loc[idcg_matrix['PMID1'] == pmid])
 
         for index, n in enumerate(value_of_n):
             dcg_score = calculate_dcg_at_n(n, all_assessed_pmids)
@@ -156,7 +157,8 @@ def write_to_tsv(pmids: list, ndcg_matrix: np.matrix, output_file: str):
         Numpy matrix with all nDCG scores.
     """
 
-    ndcg_matrix = pd.DataFrame(ndcg_matrix, columns=['nDCG@5', 'nDCG@10', 'nDCG@15', 'nDCG@20', 'nDCG@25', 'nDCG@50'])
+    ndcg_matrix = pd.DataFrame(ndcg_matrix, columns=[
+                               'nDCG@5', 'nDCG@10', 'nDCG@15', 'nDCG@20', 'nDCG@25', 'nDCG@50'])
     # Insert all PMIDs
     ndcg_matrix.insert(0, 'PMIDs', pmids)
     # Calculate and append average of each nDCG score
@@ -165,20 +167,22 @@ def write_to_tsv(pmids: list, ndcg_matrix: np.matrix, output_file: str):
     ndcg_matrix.loc[len(ndcg_matrix.index)] = average_values
     pd.DataFrame(ndcg_matrix).to_csv(output_file, sep="\t")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str,
                         help="Path for RELISH 4 column TSV file (with relevance and word mover's closeness scores).")
-    parser.add_argument('-o', '--output', type=str, help="Path for generated nDCG@n matrix TSV file.")
+    parser.add_argument('-o', '--output', type=str,
+                        help="Path for generated nDCG@n matrix TSV file.")
     args = parser.parse_args()
 
-    
-
     if not os.path.exists("./data/output/gain_matrices"):
-            os.makedirs("./data/output/gain_matrices")
+        os.makedirs("./data/output/gain_matrices")
 
     similarity_matrix = load_word_movers_matrix(args.input)
     get_dcg_matrix(similarity_matrix, "./data/output/gain_matrices/dcg.tsv")
-    get_identity_dcg_matrix(similarity_matrix, "./data/output/gain_matrices/idcg.tsv")
-    pmids, ndcg_matrix = fill_ndcg_scores("./data/output/gain_matrices/dcg.tsv", "./data/output/gain_matrices/idcg.tsv")
+    get_identity_dcg_matrix(
+        similarity_matrix, "./data/output/gain_matrices/idcg.tsv")
+    pmids, ndcg_matrix = fill_ndcg_scores(
+        "./data/output/gain_matrices/dcg.tsv", "./data/output/gain_matrices/idcg.tsv")
     write_to_tsv(pmids, ndcg_matrix, args.output)
