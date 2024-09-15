@@ -46,7 +46,7 @@ def sort_collection(pmid: str, data: pd.DataFrame) -> pd.DataFrame:
     return sorted_collection
 
 
-def calculate_precision(sorted_collection: pd.DataFrame, n: int, multi_class: bool) -> float:
+def calculate_precision(sorted_collection: pd.DataFrame, n: int, classes: int) -> float:
     """
     Calculates the precision score for the input sorted_collection at given n value.
     Parameters
@@ -55,18 +55,18 @@ def calculate_precision(sorted_collection: pd.DataFrame, n: int, multi_class: bo
         Sorted Pandas Dataframe based on the given PMID .
     n : int
         Value of n at which precision is to be calculated.
-    multi_class : bool
-        Defines whether to take into account multiple classes for the precision score.
+    classes : int
+        Number of classes 2 or 3 for class distribution.
     Returns
     -------
     precision_n : float
         Value of Precision@n.
     """
     top_n = sorted_collection[:n]
-    if multi_class:
-       true_positives_n = len(top_n[(top_n["Relevance"] == 2)]) # 3-classes solution
-    else: 
-        true_positives_n = len(top_n[(top_n["Relevance"] == 2) | (top_n["Relevance"] == 1)]) # 2-classes solution
+    if int(classes) == 2:
+        true_positives_n = len(top_n[(top_n["Relevance"] == 2) | (top_n["Relevance"] == 1)]) # two classes
+    else:
+        true_positives_n = len(top_n[top_n["Relevance"] == 2])  # three classes
     precision_n = round(true_positives_n/n, 4)
     return precision_n
 
