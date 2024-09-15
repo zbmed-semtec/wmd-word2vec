@@ -1,3 +1,4 @@
+import os
 import argparse
 import pandas as pd
 import numpy as np
@@ -118,15 +119,18 @@ def write_to_tsv(ref_pmids: list, precision_matrix: np.array, output_filepath: s
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-w", "--wmd_file_path", help="File path to the 4-column word mover's closeness existing pair matrix"
+    parser.add_argument("-i", "--wmd_file_path", help="File path to the 4-column word mover's closeness existing pair matrix"
                         , required=True)
     parser.add_argument("-o", "--output_path", help="File path to save the precision matrix",
                         required=True)
-    parser.add_argument("-m", "--multiple_classes", help="If 1, apply the 3-class approach, if 0 apply the 2-class approach of considering partially-relevant articles to be positive.",
+    parser.add_argument("-c", "--classes", help="Number of classes (2 or 3).",
                         required=True)
 
     args = parser.parse_args()
 
     ref_pmids, data = read_file(args.wmd_file_path)
-    matrix = generate_matrix(ref_pmids, data, args.multiple_classes)
+    matrix = generate_matrix(ref_pmids, data, args.classes)
+    output_dir = os.path.dirname(args.output_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     write_to_tsv(ref_pmids, matrix, args.output_path)

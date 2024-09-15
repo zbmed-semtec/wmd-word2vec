@@ -1,62 +1,61 @@
 # Source code: https://github.com/zbmed-semtec/medline-preprocessing/blob/main/code/Evaluation/calculate_gain.py
 # This file includes the modifications to the source code according to this project
 
-from numpy import ndarray
-from typing import Any, List, Tuple
-import numpy as np
-import pandas as pd
-import math
-import os
-import sys
+import os, sys
 import argparse
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
+import math
+import pandas as pd
+import numpy as np
+from typing import Any, List, Tuple
+from numpy import ndarray
 
-def load_word_movers_matrix(word_movers_matrix: str) -> pd.DataFrame:
+def load_cosine_sim_matrix(cosine_similarity_matrix: str) -> pd.DataFrame:
     """
-    Loads and return a pandas dataframe object of the word mover's closeness.
+    Loads and return a pandas dataframe object of the WMD Similarity matrix.
     Parameters
     ----------
-    word_movers_matrix : str
-        Filepath for the word mover's closeness matrix of existing pairs in the TSV format.
+    cosine_similarity_matrix : str
+        Filepath for the WMD Similarity matrix of existing pairs in the TSV format.
     Returns
     -------
     sim_matrix : pd.Dataframe
-        Word mover's closeness matrix.
+        WMD Similarity matrix.
     """
-    sim_matrix = pd.read_csv(word_movers_matrix, sep='\t')
+    sim_matrix = pd.read_csv(cosine_similarity_matrix, sep='\t')
     return sim_matrix
 
 
 def get_dcg_matrix(similarity_matrix: pd.DataFrame, output_file: str):
     """
-    Sorts the word mover's closeness matrix based on the word mover's closeness (descending order) for each Reference PMID
+    Sorts the WMD Similarity matrix based on the WMD Similarity values (descending order) for each Reference PMID
     and creates a new TSV file based on the sorted values.
     Parameters
     ----------
     similarity_matrix : pd.Dataframe
-        Word mover's closeness matrix.
+        WMD Similarity matrix.
     """
-    dcg_matrix = similarity_matrix
+    dcg_matrix = similarity_matrix.sort_values(['PMID1', 'WMD Similarity'],
+                                               ascending=[True, False], ignore_index=True)                                               
     dcg_matrix.index = dcg_matrix.index + 1
-    # dcg_matrix.to_csv("./data/doc2vec-doc/dcg_doc2vec-doc.tsv", sep='\t')
     dcg_matrix.to_csv(output_file, sep='\t')
 
 
 def get_identity_dcg_matrix(similarity_matrix: pd.DataFrame, output_file: str):
     """
-    Sorts the word mover's closeness matrix based on the Relevance assessment scores (2's, 1's, 0's) for each Reference PMID
+    Sorts the WMD Similarity matrix based on the Relevance assessment scores (2's, 1's, 0's) for each Reference PMID
     and creates a new TSV file based on the sorted values.
     Parameters
     ----------
     similarity_matrix : pd.Dataframe
-        Word mover's closenss matrix.
+        WMD Similarity matrix.
     """
-    idcg_matrix = similarity_matrix.sort_values(['PMID1', 'relevance'],
-                                                ascending=[True, False], ignore_index=True)
+    idcg_matrix = similarity_matrix.sort_values(['PMID1', 'Relevance'],
+                                                ascending=[True, False], ignore_index=True)                                                
     idcg_matrix.index = idcg_matrix.index + 1
     idcg_matrix.to_csv(output_file, sep='\t')
 
@@ -77,7 +76,7 @@ def calculate_dcg_at_n(n: int, all_assessed_pmids: pd.DataFrame) -> float:
     """
     dcg_n = 0
     for i, (index, row) in enumerate(all_assessed_pmids[:n].iterrows(), start=1):
-        rel = row['relevance']
+        rel = row['Relevance']
         value = (2**rel - 1) / math.log2(i + 1)
         dcg_n += value
     return round(dcg_n, 4)
@@ -100,7 +99,7 @@ def calculate_idcg_at_n(n: int, sorted_assessed_pmids: pd.DataFrame) -> float:
     """
     idcg_n = 0
     for i, (index, row) in enumerate(sorted_assessed_pmids[:n].iterrows(), start=1):
-        rel = row['relevance']
+        rel = row['Relevance']
         value = (2**rel - 1) / math.log2(i + 1)
         idcg_n += value
     return round(idcg_n, 4)
@@ -112,9 +111,9 @@ def fill_ndcg_scores(dcg_matrix: str, idcg_matrix: str) -> Tuple[List[Any], ndar
     Parameters
     ----------
     dcg_matrix : str
-        Filepath for TSV file of word mover's closeness values sorted in the descending order.
+        Filepath for TSV file of WMD Similarity values sorted in the descending order.
     idcg_matrix : str
-        Filepath for TSV file of word mover's closeness values sorted based on relevance scores.
+        Filepath for TSV file of WMD Similarity values sorted based on relevance scores.
     Returns
     -------
     all_pmids : list
@@ -132,10 +131,8 @@ def fill_ndcg_scores(dcg_matrix: str, idcg_matrix: str) -> Tuple[List[Any], ndar
     ndcg_matrix = np.empty(shape=(len(all_pmids), len(value_of_n)))
 
     for pmid_index, pmid in enumerate(all_pmids):
-        all_assessed_pmids = pd.DataFrame(
-            dcg_matrix.loc[dcg_matrix['PMID1'] == pmid])
-        sorted_assessed_pmids = pd.DataFrame(
-            idcg_matrix.loc[idcg_matrix['PMID1'] == pmid])
+        all_assessed_pmids = pd.DataFrame(dcg_matrix.loc[dcg_matrix['PMID1'] == pmid])
+        sorted_assessed_pmids = pd.DataFrame(idcg_matrix.loc[idcg_matrix['PMID1'] == pmid])
 
         for index, n in enumerate(value_of_n):
             dcg_score = calculate_dcg_at_n(n, all_assessed_pmids)
@@ -157,8 +154,7 @@ def write_to_tsv(pmids: list, ndcg_matrix: np.matrix, output_file: str):
         Numpy matrix with all nDCG scores.
     """
 
-    ndcg_matrix = pd.DataFrame(ndcg_matrix, columns=[
-                               'nDCG@5', 'nDCG@10', 'nDCG@15', 'nDCG@20', 'nDCG@25', 'nDCG@50'])
+    ndcg_matrix = pd.DataFrame(ndcg_matrix, columns=['nDCG@5', 'nDCG@10', 'nDCG@15', 'nDCG@20', 'nDCG@25', 'nDCG@50'])
     # Insert all PMIDs
     ndcg_matrix.insert(0, 'PMIDs', pmids)
     # Calculate and append average of each nDCG score
@@ -171,18 +167,19 @@ def write_to_tsv(pmids: list, ndcg_matrix: np.matrix, output_file: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', type=str,
-                        help="Path for RELISH 4 column TSV file (with relevance and word mover's closeness scores).")
-    parser.add_argument('-o', '--output', type=str,
-                        help="Path for generated nDCG@n matrix TSV file.")
+                        help="Path for TREC/RELISH 4 column TSV file (with relevance and WMD Similarity scores).")
+    parser.add_argument('-o', '--output', type=str, help="Path for generated nDCG@n matrix TSV file.")
     args = parser.parse_args()
 
     if not os.path.exists("./data/output/gain_matrices"):
         os.makedirs("./data/output/gain_matrices")
 
-    similarity_matrix = load_word_movers_matrix(args.input)
-    get_dcg_matrix(similarity_matrix, "./data/output/gain_matrices/dcg.tsv")
-    get_identity_dcg_matrix(
-        similarity_matrix, "./data/output/gain_matrices/idcg.tsv")
-    pmids, ndcg_matrix = fill_ndcg_scores(
-        "./data/output/gain_matrices/dcg.tsv", "./data/output/gain_matrices/idcg.tsv")
+    similarity_matrix = load_cosine_sim_matrix(args.input)
+    get_dcg_matrix(similarity_matrix, f"./data/output/gain_matrices/dcg.tsv")
+    get_identity_dcg_matrix(similarity_matrix, f"./data/output/gain_matrices/idcg.tsv")
+    pmids, ndcg_matrix = fill_ndcg_scores(f"./data/output/gain_matrices/dcg.tsv", f"./data/output/gain_matrices/idcg.tsv")
+    
+    output_dir = os.path.dirname(args.output)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     write_to_tsv(pmids, ndcg_matrix, args.output)

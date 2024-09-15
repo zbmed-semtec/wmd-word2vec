@@ -1,19 +1,18 @@
-import argparse
-from gensim.models import KeyedVectors
-from multiprocessing import Pool, freeze_support
+import os
 import csv
-import numpy as np
-from gensim.models import KeyedVectors
+import yaml
 import time
 import json
-import os
+import argparse
+import itertools
+import numpy as np
+from gensim.models import KeyedVectors
+from gensim.models import KeyedVectors
+from multiprocessing import Pool, freeze_support
+
+
 global_npy_dict = None
 global_word2vec = None
-try:
-    # Due to multiprocessing, this needs to be initialized here.
-    global_word2vec = KeyedVectors.load("./data/word2vec_model")
-except:
-    "Word embddings not definined yet, generating word embeddings..."
 
 
 def prepare_from_NPY(filepath_in: str):
@@ -41,8 +40,25 @@ def prepare_from_NPY(filepath_in: str):
         dict[int(line[0])] = [w for w in document]
     return dict
 
+def generate_param_combinations(params):
+    param_keys = []
+    param_values = []
+    
+    for key, value in params.items():
+        if 'values' in value:  # Check if 'values' exist in this parameter
+            param_keys.append(key)
+            param_values.append(value['values'])
+        else:
+            param_keys.append(key)
+            param_values.append([value['value']])  # Use the single value as a list
+    
+    param_combinations = [dict(zip(param_keys, combination)) 
+                          for combination in itertools.product(*param_values)]
+    
+    return param_combinations
 
-def generate_Word2Vec_model(params: dict, iteration: int, word_embedding_directory: str):
+
+def generate_Word2Vec_model(params: dict, model_directory: str):
     '''
     Generates a word2vec model from all RELISH sentences using gensim and saves three model files.
 
@@ -52,8 +68,8 @@ def generate_Word2Vec_model(params: dict, iteration: int, word_embedding_directo
             The filepath of the RELISH input npy file.
     params: dict
             A dictionary of the hyperparameters for the model.
-    iteration: int
-            The number of hyperparameters processed.
+    model_directory : str
+            Directory to save the trained Word2vec model.
     '''
     from gensim.models import Word2Vec
     sentence_list = []
@@ -62,10 +78,7 @@ def generate_Word2Vec_model(params: dict, iteration: int, word_embedding_directo
 
     params['sentences'] = sentence_list
     model = Word2Vec(**params)
-    model.save("./data/word2vec_model")  # This has to be static
-    os.makedirs(f"{word_embedding_directory}/{iteration}", exist_ok=True)
-    model.save(f"{word_embedding_directory}/{iteration}/word2vec_model")
-
+    model.save(model_directory)
 
 def get_WMD_distance(tokens: list):
     '''
@@ -84,7 +97,7 @@ def get_WMD_distance(tokens: list):
     return global_word2vec.wv.wmdistance(tokens[0], tokens[1])
 
 
-def complete_relevance_matrix(evaluation_file: str, iteration: int):
+def complete_relevance_matrix(evaluation_file: str, output_file: str):
     '''
     Adds Word Mover's Distance to the evaluation matrix from the .npy formatted embeddings.
 
@@ -92,8 +105,8 @@ def complete_relevance_matrix(evaluation_file: str, iteration: int):
     ----------
     evaluation_file: str
             The evaluation matrix csv file.
-    iteration: int
-            The number of hyperparameters processed.
+    output_file : str
+            File path to relevance matrix with WMD values.
     '''
     start = time.time()
 
@@ -101,7 +114,7 @@ def complete_relevance_matrix(evaluation_file: str, iteration: int):
     header = []
     rows = []
     tokenset_pairs = []
-    with open("./data/relevance_WMD_blank.tsv", newline='') as csvfile:
+    with open(evaluation_file, newline='') as csvfile:
         spamreader = csv.reader(csvfile, delimiter='\t')
         header = next(spamreader)  # Save and remove header
         for row in spamreader:
@@ -116,9 +129,9 @@ def complete_relevance_matrix(evaluation_file: str, iteration: int):
             except KeyError:
                 # print(f"KeyError: {row[0]} or {row[1]} not found in dictionary")
                 continue
-    print(f"Processing {len(tokenset_pairs)} rows...")
 
-    with open(f"{evaluation_file}_{iteration}.tsv", 'w', newline='') as csvfile:
+    with open(output_file, 'w', newline='') as csvfile:
+        header[-1] = 'WMD Similarity'
         writer = csv.writer(csvfile, delimiter='\t')
         writer.writerow(header)
 
@@ -147,21 +160,36 @@ if __name__ == "__main__":
                         help="Path to input RELISH tokenized .npy file")
     parser.add_argument("-ma", "--matrix", type=str,
                         help="Path of relevance matrix file")
-    parser.add_argument("-pj", "--params_json", type=str,
-                        help="File location of word2vec parameter list.")
-    parser.add_argument("-md", "--model_directory", type=str,
-                        help="Directory to store word embeddings in.")
+    parser.add_argument("-p", "--params", type=str,
+                        help="File location of word2vec parameter yaml file.")
+    parser.add_argument("-o", "--output_directory", type=str,
+                        help="Directory to store models and relevance matrices.")
     args = parser.parse_args()
 
     params = []
-    with open(args.params_json, "r") as openfile:
-        params = json.load(openfile)
+    with open(args.params, "r") as file:
+        content = yaml.safe_load(file)
+        params = content['params']
 
-    print("Preparing NPY dict...")
+    param_combinations = generate_param_combinations(params)
+
+    print("Preparing NPY Dict")
     global_npy_dict = prepare_from_NPY(args.input)
-    for iteration in range(len(params)):
+
+    for i, param_set in enumerate(param_combinations):
+        print(f"Training model with hyperparameters: {param_set}")
+        model_directory = f"{args.output_directory}/models"
+        os.makedirs(model_directory, exist_ok=True)
+        model_output_file = f"{model_directory}/word2vec_model_{i}.model"
         generate_Word2Vec_model(
-            params[iteration], iteration, args.model_directory)
-        global_word2vec = KeyedVectors.load("./data/word2vec_model")
+            param_set, model_output_file)
+        try:
+            # Due to multiprocessing, this needs to be initialized here.
+            global_word2vec = KeyedVectors.load(model_output_file)
+        except:
+            "Word embddings not definined yet, generating word embeddings..."
         freeze_support()
-        complete_relevance_matrix(args.matrix, iteration)
+        matrix_directory = f"{args.output_directory}/matrix"
+        os.makedirs(matrix_directory, exist_ok=True)
+        matrix_output_file = f"{matrix_directory}/relevance_WMD_{i}.tsv"
+        complete_relevance_matrix(args.matrix, matrix_output_file)
