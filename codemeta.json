@@ -26,12 +26,6 @@
             "givenName": "Rohitha"
         },
         {
-            "id": "_:contributor_3",
-            "type": "Person",
-            "familyName": "Talha",
-            "givenName": "Muhammad"
-        },
-        {
             "id": "https://orcid.org/0000-0002-1018-0370",
             "type": "Person",
             "affiliation": {
