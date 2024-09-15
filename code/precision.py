@@ -71,7 +71,7 @@ def calculate_precision(sorted_collection: pd.DataFrame, n: int, classes: int) -
     return precision_n
 
 
-def generate_matrix(ref_pmids: list, data: pd.DataFrame, multi_class: bool) -> np.array:
+def generate_matrix(ref_pmids: list, data: pd.DataFrame, classes: int) -> np.array:
     """
     Wrapper function to generate the precision matrix at the given values of n for every unique PMID in the input data.
     Parameters
@@ -80,8 +80,8 @@ def generate_matrix(ref_pmids: list, data: pd.DataFrame, multi_class: bool) -> n
         List of all unique PMIDs.
     data : pd.Dataframe
         Pandas Dataframe cosisting of 4 columns: PMID1, PMID2, Relevance, Word mover's closeness.
-    multi_class : bool
-        Defines whether to take into account multiple classes for the precision score.
+    classes : int
+        Number of classes (2 or 3) for class distribution.
     Returns
     -------
     precision_matrix : np.array
@@ -92,7 +92,7 @@ def generate_matrix(ref_pmids: list, data: pd.DataFrame, multi_class: bool) -> n
     for pmid_index, pmid in enumerate(ref_pmids):
         sorted_collection = sort_collection(pmid, data)
         for index, n in enumerate(value_of_n):
-            precision_n = calculate_precision(sorted_collection, n, multi_class)
+            precision_n = calculate_precision(sorted_collection, n, classes)
             precision_matrix[pmid_index][index] = precision_n
     return precision_matrix
 
