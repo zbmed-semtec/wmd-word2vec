@@ -14,7 +14,6 @@ This repository focuses on the RELISH Corpus to identify relevancy of a given pa
         - [Using Trained Word2Vec models](#using-trained-word2vec-models)
           - [Parameters](#parameters)
           - [Hyperparameters](#hyperparameters)
-        - [Using Pre-trained Word2Vec models](#using-pre-trained-word2vec-models)
     2. [Calculate Word Mover's Distance](#calculate-word-movers-distance-📐)
     3. [Evaluation](#evaluation)
         - [Precision@N](#precisionn)
@@ -35,7 +34,7 @@ The input data for this method consists of preprocessed tokens derived from the 
 The following section outlines the process of generating word-level embeddings for each PMID of the RELISH corpus and completing the similarity matrix with word mover's distances.
 
 ### Generate Embeddings
-The following section species on the process of either training a word2vec model or using a pretrained one.
+The following section species on the process of training a word2vec model.
 
 #### Using Trained Word2Vec models
 We construct Word2Vec models with customizable hyperparameters. We employ the parameters shown below in order to generate our models.
