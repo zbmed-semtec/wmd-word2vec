@@ -1,3 +1,4 @@
+import os
 import argparse
 import pandas as pd
 import numpy as np
@@ -45,7 +46,7 @@ def sort_collection(pmid: str, data: pd.DataFrame) -> pd.DataFrame:
     return sorted_collection
 
 
-def calculate_precision(sorted_collection: pd.DataFrame, n: int, multi_class: bool) -> float:
+def calculate_precision(sorted_collection: pd.DataFrame, n: int, classes: int) -> float:
     """
     Calculates the precision score for the input sorted_collection at given n value.
     Parameters
@@ -54,23 +55,23 @@ def calculate_precision(sorted_collection: pd.DataFrame, n: int, multi_class: bo
         Sorted Pandas Dataframe based on the given PMID .
     n : int
         Value of n at which precision is to be calculated.
-    multi_class : bool
-        Defines whether to take into account multiple classes for the precision score.
+    classes : int
+        Number of classes 2 or 3 for class distribution.
     Returns
     -------
     precision_n : float
         Value of Precision@n.
     """
     top_n = sorted_collection[:n]
-    if multi_class:
-       true_positives_n = len(top_n[(top_n["Relevance"] == 2)]) # 3-classes solution
-    else: 
-        true_positives_n = len(top_n[(top_n["Relevance"] == 2) | (top_n["Relevance"] == 1)]) # 2-classes solution
+    if int(classes) == 2:
+        true_positives_n = len(top_n[(top_n["Relevance"] == 2) | (top_n["Relevance"] == 1)]) # two classes
+    else:
+        true_positives_n = len(top_n[top_n["Relevance"] == 2])  # three classes
     precision_n = round(true_positives_n/n, 4)
     return precision_n
 
 
-def generate_matrix(ref_pmids: list, data: pd.DataFrame, multi_class: bool) -> np.array:
+def generate_matrix(ref_pmids: list, data: pd.DataFrame, classes: int) -> np.array:
     """
     Wrapper function to generate the precision matrix at the given values of n for every unique PMID in the input data.
     Parameters
@@ -79,8 +80,8 @@ def generate_matrix(ref_pmids: list, data: pd.DataFrame, multi_class: bool) -> n
         List of all unique PMIDs.
     data : pd.Dataframe
         Pandas Dataframe cosisting of 4 columns: PMID1, PMID2, Relevance, Word mover's closeness.
-    multi_class : bool
-        Defines whether to take into account multiple classes for the precision score.
+    classes : int
+        Number of classes (2 or 3) for class distribution.
     Returns
     -------
     precision_matrix : np.array
@@ -91,7 +92,7 @@ def generate_matrix(ref_pmids: list, data: pd.DataFrame, multi_class: bool) -> n
     for pmid_index, pmid in enumerate(ref_pmids):
         sorted_collection = sort_collection(pmid, data)
         for index, n in enumerate(value_of_n):
-            precision_n = calculate_precision(sorted_collection, n, multi_class)
+            precision_n = calculate_precision(sorted_collection, n, classes)
             precision_matrix[pmid_index][index] = precision_n
     return precision_matrix
 
@@ -118,15 +119,18 @@ def write_to_tsv(ref_pmids: list, precision_matrix: np.array, output_filepath: s
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-w", "--wmd_file_path", help="File path to the 4-column word mover's closeness existing pair matrix"
+    parser.add_argument("-i", "--wmd_file_path", help="File path to the 4-column word mover's closeness existing pair matrix"
                         , required=True)
     parser.add_argument("-o", "--output_path", help="File path to save the precision matrix",
                         required=True)
-    parser.add_argument("-m", "--multiple_classes", help="If 1, apply the 3-class approach, if 0 apply the 2-class approach of considering partially-relevant articles to be positive.",
+    parser.add_argument("-c", "--classes", help="Number of classes (2 or 3).",
                         required=True)
 
     args = parser.parse_args()
 
     ref_pmids, data = read_file(args.wmd_file_path)
-    matrix = generate_matrix(ref_pmids, data, args.multiple_classes)
+    matrix = generate_matrix(ref_pmids, data, args.classes)
+    output_dir = os.path.dirname(args.output_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     write_to_tsv(ref_pmids, matrix, args.output_path)

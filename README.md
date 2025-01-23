@@ -1,3 +1,7 @@
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+
+[![SWH](https://archive.softwareheritage.org/badge/swh:1:dir:db21ed332bddbccf48c9ee5856c8539096e74a64/)](https://archive.softwareheritage.org/swh:1:dir:db21ed332bddbccf48c9ee5856c8539096e74a64;origin=https://github.com/zbmed-semtec/wmd-word2vec;visit=swh:1:snp:03f94efb23a9d3a222a9087401081ad679b22f56;anchor=swh:1:rev:215c9bd3f9718c15a43d4163f6a1d46754097837)
+
 # WMD-Word2Vec
 This repository focuses on the RELISH Corpus to identify relevancy of a given pair of PubMed papers. The approach uses Word Mover's Distance (WMD), which computes a semantic closeness between two documents. WMD does not require any hyperparamters to function, however it is reliant on word embeddings, with which it can calculate the distance of word vectors between two documents.
 
@@ -10,7 +14,6 @@ This repository focuses on the RELISH Corpus to identify relevancy of a given pa
         - [Using Trained Word2Vec models](#using-trained-word2vec-models)
           - [Parameters](#parameters)
           - [Hyperparameters](#hyperparameters)
-        - [Using Pre-trained Word2Vec models](#using-pre-trained-word2vec-models)
     2. [Calculate Word Mover's Distance](#calculate-word-movers-distance-📐)
     3. [Evaluation](#evaluation)
         - [Precision@N](#precisionn)
@@ -20,7 +23,7 @@ This repository focuses on the RELISH Corpus to identify relevancy of a given pa
 
 ## About
 
-Our approach involves utilizing Word2Vec to capture word-level semantics and to generate word embeddings. We then employ the centroid approach to create document-level embeddings, which entails calculating the centroids of word embeddings within each document's title and abstract. For word embeddings, we utilize both pretrained and trained models. By default, we use the "word2vec-google-news-300" Gensim word2vec model as the pretrained model for word embeddings. However, it can be substituted with other pretrained models available in the Gensim library. For our trained model, we utilize the documents from the RELISH dataset as the training corpus. The words from the titles and abstracts of each document are combined and input into the model as a single document.
+Our approach involves utilizing Word2Vec to capture word-level semantics and to generate word embeddings. We then employ the centroid approach to create document-level embeddings, which entails calculating the centroids of word embeddings within each document's title and abstract. For word embeddings, we utilize trained models. For our trained model, we utilize the documents from the RELISH dataset as the training corpus. The words from the titles and abstracts of each document are combined as the input to the model as a single document.
 
 ## Input Data
 
@@ -31,7 +34,7 @@ The input data for this method consists of preprocessed tokens derived from the 
 The following section outlines the process of generating word-level embeddings for each PMID of the RELISH corpus and completing the similarity matrix with word mover's distances.
 
 ### Generate Embeddings
-The following section species on the process of either training a word2vec model or using a pretrained one.
+The following section species on the process of training a word2vec model.
 
 #### Using Trained Word2Vec models
 We construct Word2Vec models with customizable hyperparameters. We employ the parameters shown below in order to generate our models.
@@ -44,9 +47,7 @@ We construct Word2Vec models with customizable hyperparameters. We employ the pa
 + **min_count:** It is the minimum number of appearances a word must have to not be ignored by the algorithm.
 
 #### Hyperparameters
-The hyperparameters can be modified in [`hyperparameters_word2vec.json`](./data/hyperparameters_word2vec.json)
-#### Using Pre-trained Word2Vec models
-By default, we make use of the Gensim Word2Vec model "word2vec-google-news-300" to generate pre-trained word embeddings.
+The hyperparameters can be modified in [`hyperparameters.yaml`](./code/hyperparameters.yaml)
 
 ### Calculate Word Mover's Distance
 To assess the similarity between two documents within the RELISH corpus, we use the Word Mover's Distance calculted via the gensim module for [Word Mover's Distance](https://radimrehurek.com/gensim/auto_examples/tutorials/run_wmd.html). For this process we complete a 4-column relevance matrix with an adjusted WMD value to represent closeness between to documents.
@@ -111,43 +112,81 @@ To deactivate the virtual environment after running the project, run the followi
 deactivate
 ```
 
-### Step 3: Generate Embeddings and Calculate Word Mover's Distances
-The [`complete_relevance_matrix.py`](./code/complete_relevance_matrix.py) script uses the RELISH Tokenized npy file as input and includes a default parameter json with preset hyperparameters. You can easily adapt it for different values and parameters by modifying the [`hyperparameters_word2vec.json`](./data/hyperparameters_word2vec.json). Make sure to have the RELISH Tokenized.npy file within the directory under the data folder.
+### Step 3: Dataset
+
+Use the Download_Dataset.sh script to download the Split Dataset by 
+running the following commands:
 
 ```
-python3 code/precision.py [-i RELISH FILE PATH] [-ma OUTPUT RELEANCE MATRIX PATH] [-pj HYPERPARAMETERS JSON PATH] [-md WORD EMBEDDINGS OUTPUT PATH]
+chmod +777 Download_Dataset.sh
+./Download_Dataset.sh
+```
+
+This script makes sure that the necessary folders are created and the files are downloaded in the corresponding folders as shown below.
+
+```
+📦 /wmd-word2vec
+└─ data
+   └─ Input
+      ├─ Tokens
+      │  ├─ relish.npy
+      └─ Ground_truth
+         └─ relevance_matrix.tsv
+```
+
+
+The file *relish.npy* is in the NumPy binary format (.npy), which is specifically used to store NumPy arrays efficiently. These arrays contain the PMID, title, and abstract for each document.
+
+In contrast, *relevance_matrix.tsv* is a Tab-separated Values file, similar to CSV but using tabs as delimiters. It stores tabular data with four columns: PMID1 | PMID2 | Relevance | WMD Similarity.
+
+Reference: Tab-separated values (TSV) file format:  
+[![FAIRsharing DOI](https://img.shields.io/badge/DOI-10.25504%2FFAIRsharing.a978c9-blue)](https://doi.org/10.25504/FAIRsharing.a978c9)
+
+### Step 4: Generate Embeddings and Calculate Word Mover's Distances
+The [`complete_relevance_matrix.py`](./code/complete_relevance_matrix.py) script uses the RELISH Tokenized npy file as input and includes a default parameter json with preset hyperparameters. You can easily adapt it for different values and parameters by modifying the [`hyperparameters.yaml`](./code/hyperparameters.yaml). Make sure to have the RELISH Tokenized.npy file within the directory under the data folder.
+
+```
+python3 code/complete_relevance_matrix.py [-i RELISH FILE PATH] [-ma OUTPUT RELEANCE MATRIX PATH] [-p HYPERPARAMETERS YAML PATH] [-o OUTPUT DIRECTORY PATH]
 ```
 
 To run this script, please execute the following command:
 
 ```
-python3 code/complete_relevance_matrix.py -i data/RELISH_Tokenized_Sample.npy -ma data/relevance_WMD -pj data/hyperparameters_word2vec.json -md data
+python3 code/complete_relevance_matrix.py -i data/Input/Tokens/relish.npy -ma data/Input/Ground_truth/relevance_matrix.tsv -p code/hyperparameters.yaml -o data/
 ```
 
 The script will first create word embeddings and then compute the Word Mover's Distances, completing the given relevance matrix. If you are using the default hyperparameters, you can expect it to create 18 new relevance matrices for each trained word2vec model.
 
 
-### Step 4: Precision@N
+### Step 5: Precision@N
 In order to calculate the Precision@N scores and execute this [script](/code/precision.py), run the following command:
 
 ```
-python3 code/precision.py [-c WMD FILE PATH] [-o OUTPUT PATH]
+python3 code/precision.py [-i WMD FILE PATH] [-o OUTPUT PATH] [-c CLASSES]
 ```
 
 You must pass the following three arguments:
 
-+ -w/ --wmd_file_path: path to the 4-column word mover's closeness existing pairs RELISH file: (tsv file)
++ -i/ --wmd_file_path: path to the 4-column word mover's closeness existing pairs RELISH file: (tsv file)
 + -o/ --output_path: path to save the generated precision matrix: (tsv file)
-+ -m/ --multiple_classes: If 1, apply the 3-class approach, if 0 apply the 2-class approach of considering partially-relevant articles to be positive.
++ -c/ --classes: Number of classes for class distribution (2 or 3)
 
 For example, if you are running the code from the code folder and have the word mover's closeness TSV file in the data folder, run the precision matrix creation for the first hyperparameter as:
 
 ```
-python3 code/precision.py -w data/relevance_WMD_0.tsv -o data/precision_WMD_0.tsv -m 1
+python3 code/precision.py -i data/matrix/relevance_WMD_0.tsv -o data/precision_three_classes/precision_WMD_0.tsv -c 3
+```
+Note: You would have to run the above command for every hyperparameter configuration by changing the file name for the cosine similarity file or use the following shell script to generate all files at once.
+
+
+```
+for VALUE in {0..17};do
+python3 code/precision.py -i data/matrix/relevance_WMD_${VALUE}.tsv -o data/precision_three_classes/precision_WMD_${VALUE}.tsv -c 3
+done
 ```
 
 
-### Step 5: nDCG@N
+### Step 6: nDCG@N
 In order to calculate nDCG scores and execute this [script](/code/calculate_gain.py), run the following command:
 
 ```
@@ -162,10 +201,18 @@ You must pass the following two arguments:
 For example, if you are running the code from the code folder and have the 4 column RELISH TSV file in the data folder, run the matrix creation for the first hyperparameter as:
 
 ```
-python3 code/calculate_gain.py -i data/relevance_WMD_0.tsv -o data/nCDG_WMD_0.tsv
+python3 code/calculate_gain.py -i data/matrix/relevance_WMD_0.tsv -o data/gain_matrices/nCDG_WMD_0.tsv
+```
+Note: You would have to run the above command for every hyperparameter configuration by changing the file name for the cosine similarity file or use the following shell script to generate all files at once.
+
+```
+for VALUE in {0..17};do
+python3 code/calculate_gain.py -i data/matrix/relevance_WMD_${VALUE}.tsv -o data/gain_matrices/ndcg_${VALUE}.tsv
+done
 ```
 
-### Step 6: Compile Results
+
+### Step 7: Compile Results
 
 In order to compile the average result values for Precison@ and nDCG@N and generate a single TSV file each, please use this [script](code/show_avg.py).
 
@@ -178,7 +225,7 @@ You must pass the following two arguments:
 If you are running the code from the code folder, run the compilation script as:
 
 ```
-python3 code/evaluation/show_avg.py -i data/output/gain_matrices/ -o data/output/results_gain.tsv
+python3 code/evaluation/show_avg.py -i data/gain_matrices/ -o data/results_gain.tsv
 ```
 
 NOTE: Please do not forget to put a `'/'` at the end of the input file path.
